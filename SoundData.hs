@@ -11,11 +11,14 @@ module SoundData where
                  deriving (Show, Eq)
 
        type Var = String
-       type Address = Int
+       
+       data Address = LocA Int
+                    | Empty
+                    deriving (Show, Eq)
 
        data Expr = VarE Var
-                 | LocE Address 
-                 | Literal Int
+                 | LocE Int
+                 | Literal Address
                  | Add Expr Expr
                  | Sub Expr Expr
                  | EqE Expr Expr
@@ -39,35 +42,35 @@ module SoundData where
        data Loc = Lambda Address Security
                 deriving (Show, Eq)
 
-       type Mem = (Address, Int) --Var or Int?
+       type Mem = (Int, Address)
 
        getLiteral :: Expr -> Int
-       getLiteral (Literal n) = n
+       getLiteral (Literal (LocA n)) = n
        getLiteral _ = -1
 
-       isElemMem :: Address -> [Mem] -> Bool
+       isElemMem :: Int -> [Mem] -> Bool
        isElemMem _ [] = False
        isElemMem l ((u1, u2) : us) = if l == u1 then True else (isElemMem l us)       
 
-       getMemValue :: Address -> [Mem] -> Int
+       getMemValue :: Int -> [Mem] -> Address
        getMemValue l ((u1, u2) : us)
                    | isElemMem l ((u1, u2) : us) = if l == u1 then u2 else (getMemValue l us)
 
-       setMemValue :: Address -> [Mem] -> Expr -> [Mem]
+       setMemValue :: Int -> [Mem] -> Expr -> [Mem]
        setMemValue l ((u1, u2) : us) (Literal n) = if l == u1 then ((u1, n) : us) else (u1, u2) : (setMemValue l us (Literal n))
 
        maxMem :: [Mem] -> Int
        maxMem ((u1, u2) : []) = u1
        maxMem ((u1, u2) : (u3, u4) : us) = if u1 >= u3 then (maxMem ((u1, u2) : us)) else (maxMem ((u3, u4) : us))
       
-       generateAddress :: [Mem] -> Address
+       generateAddress :: [Mem] -> Int
        generateAddress [] = 0
        generateAddress u = (maxMem u) + 1
        
-       insertLocation :: Address -> [Mem] -> [Mem]
-       insertLocation l [] = [(l, -1)]
+       insertLocation :: Int -> [Mem] -> [Mem]
+       insertLocation l [] = [(l, Empty)]
        insertLocation l u = (head u) : (insertLocation l (tail u)) 
 
-       except :: [Mem] -> Address -> [Mem]
+       except :: [Mem] -> Int -> [Mem]
        except [] _ = []
        except ((u1, u2) : us) l = if u1 == l then (except us l) else (u1, u2) : (except us l)
