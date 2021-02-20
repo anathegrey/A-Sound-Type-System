@@ -1,29 +1,16 @@
 module SoundData where
 
-       data Security = High
-                     | Low
-                     deriving (Show, Eq)
-
-       data Type = TypeT Security
-                 | TypeVar Security
-                 | TypeCmd Security
-                 | Free
-                 deriving (Show, Eq)
-
+--fig 3
        type Var = String
-       
-       data Address = LocA Int
-                    | Empty
-                    deriving (Show, Eq)
 
        data Expr = VarE Var
                  | LocE Int
-                 | Literal Address
+                 | Literal Int
                  | Add Expr Expr
                  | Sub Expr Expr
                  | EqE Expr Expr
                  | Less Expr Expr
-                 deriving (Show, Eq)
+                 deriving (Show, Eq, Ord)
 
        data Cmd = EqC Expr Expr
                 | Seq Cmd Cmd
@@ -32,27 +19,21 @@ module SoundData where
                 | Letvar Expr Expr Cmd
                 deriving (Show, Eq)
 
-       data Phrases = PhrasesE Expr
-                    | PhrasesC Cmd
-                    deriving (Show, Eq)
+       checkBoolExpr :: Expr -> Bool
+       checkBoolExpr (EqE e1 e2) = if (e1 == e2) then True else False
+       checkBoolExpr (Less e1 e2) = if (e1 < e2) then True else False
+       
+       type Mem = (Int, Int)
 
-       data Basis = Gama String Type
-                  deriving (Show, Eq)
-
-       data Loc = Lambda Address Security
-                deriving (Show, Eq)
-
-       type Mem = (Int, Address)
-
-       getLiteral :: Expr -> Int
-       getLiteral (Literal (LocA n)) = n
-       getLiteral _ = -1
-
+       addLiteral :: Expr -> Expr -> Expr
+       addLiteral (Literal n1) (Literal n2) = Literal (n1 + n2)
+       addLiteral n1 n2 = Add n1 n2
+       
        isElemMem :: Int -> [Mem] -> Bool
        isElemMem _ [] = False
-       isElemMem l ((u1, u2) : us) = if l == u1 then True else (isElemMem l us)       
+       isElemMem l ((u1, u2) : us) = if l == u1 then True else (isElemMem l us)
 
-       getMemValue :: Int -> [Mem] -> Address
+       getMemValue :: Int -> [Mem] -> Int
        getMemValue l ((u1, u2) : us)
                    | isElemMem l ((u1, u2) : us) = if l == u1 then u2 else (getMemValue l us)
 
@@ -67,10 +48,29 @@ module SoundData where
        generateAddress [] = 0
        generateAddress u = (maxMem u) + 1
        
-       insertLocation :: Int -> [Mem] -> [Mem]
-       insertLocation l [] = [(l, Empty)]
-       insertLocation l u = (head u) : (insertLocation l (tail u)) 
+       insertPair :: Int -> [Mem] -> Expr -> [Mem]
+       insertPair l [] (Literal n) = [(l, n)]
+       insertPair l u n = (head u) : (insertPair l (tail u) n)
 
        except :: [Mem] -> Int -> [Mem]
        except [] _ = []
        except ((u1, u2) : us) l = if u1 == l then (except us l) else (u1, u2) : (except us l)
+
+--fig 5
+       data DataTypes = High
+                      | Low
+                      deriving (Show, Eq)
+       instance Ord DataTypes where
+           Low  <= High = True
+           High <= High = True
+           Low  <= Low  = True
+           _    <= _    = False 
+
+       data PhraseTypes = TypeT DataTypes
+                        | TypeVar DataTypes
+                        | TypeCmd DataTypes
+                        | None
+                        deriving Show
+
+       data LocTyping = LocTyping Mem DataTypes
+       data IDTyping = IDTyping Var PhraseTypes
