@@ -17,7 +17,7 @@ module SoundTypeSystem where
        substCmd l x (While expr c) = While (substExpr l x expr) (substCmd l x c)
        substCmd l x (Letvar (VarE y) expr c) = Letvar (VarE y) (substExpr l x expr) (substCmd l x c)
 
---fig 4
+--fig 3
        evalExpr :: [Mem] -> Expr -> Expr
        evalExpr u (Literal n) = (Literal n)                                                                             --Base
        evalExpr u (LocE l) = if (isElemMem l u) then (Literal (getMemValue l u)) else (LocE l)                          --Contents
@@ -41,7 +41,7 @@ module SoundTypeSystem where
                | otherwise = u2 --enters loop 
                where u1 = evalCmd u c
                      u2 = evalCmd u1 (While expr c)
-       evalCmd u (Letvar (VarE x) expr c) = let n = evalExpr u expr 
+       evalCmd u (Letvar (VarE x) expr c) = let n = evalExpr u expr                                                     --BindVar
                                                 l = generateAddress u
                                                 u1 = insertPair l u n
                                                 u2 = evalCmd u1 (substCmd l x c)
@@ -51,10 +51,21 @@ module SoundTypeSystem where
 --fig 5
 
        typingRulesExpr :: [LocTyping] -> [IDTyping] -> Expr -> PhraseTypes -> Bool
-       typingRulesExpr lambda gama expr (TypeT t) = if t1 <= t then True else False
-                                                  where t1 = searchID expr gama
+       typingRulesExpr lambda gama expr (TypeT t) = let t1 = searchIDExpr expr gama                                     --R-Val'
+                                                   in t1 <= t
 
-       typingRulesCmd :: [LocTyping] -> [IDTyping] -> Cmd -> PhraseTypes -> Bool
+      {- typingRulesCmd :: [LocTyping] -> [IDTyping] -> Cmd -> PhraseTypes -> Bool
+       typingRulesCmd lambda gama (EqC e1 e2) (TypeCmd t1) = let tVar = searchIDExpr e1 gama                            --Assign'
+                                                                 t    = searchLoc e2 lambda
+                                                            in (tVar == t && t1 <= t) 
+       typingRulesCmd lambda gama (If e c1 c2) (TypeCmd t1) = let t     = searchLoc e lambda                            --If'
+                                                                  tCmd1 = searchIDCmd c1 gama
+                                                                  tCmd2 = searchIDCmd c2 gama
+                                                              in (t == tCmd1 && t == tCmd2 && t1 <= t)
+       typingRulesCmd lambda gama (While e c) (TypeCmd t1) = let t    = searchLoc e lambda                              --While'
+                                                                 tCmd = searchCmd c gama
+                                                             in (t == tCmd && t1 <= t) -}
+                                                            
        
 
 --exemplos

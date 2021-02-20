@@ -72,9 +72,14 @@ module SoundData where
                         | None
                         deriving Show
 
-       type LocTyping = (Mem, DataTypes)
+       type LocTyping = (Mem, PhraseTypes)
        type IDTyping = (Var, PhraseTypes)
 
-       searchID :: Expr -> [IDTyping] -> DataTypes
-       searchID (VarE x) ((y, TypeVar t) : ys) = if x == y then t else (searchID (VarE x) ys)
-       --searchID expr ((y, TypeT t) : ys) = if expr == y then t else (searchID expr ys)
+       searchIDExpr :: Expr -> [IDTyping] -> DataTypes
+       searchIDExpr (VarE x) ((y, TypeVar t) : ys) = if x == y then t else (searchIDExpr (VarE x) ys)
+       searchIDExpr (VarE x) (_ : ys) = searchIDExpr (VarE x) ys
+
+       --searchIDCmd :: Cmd -> [IDTyping] -> DataTypes 
+
+       searchLoc :: Expr -> [LocTyping] -> DataTypes
+       searchLoc (Literal x) (((l, y), TypeT t) : ls) = if x == y then t else (searchLoc (Literal x) ls) 
