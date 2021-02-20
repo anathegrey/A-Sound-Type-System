@@ -50,8 +50,12 @@ module SoundTypeSystem where
 
 --fig 5
 
-       typingRulesExpr :: LocTyping -> IDTyping -> Expr -> PhraseTypes
-       typingRulesExpr lambda gama expr (TypeT t) = 
+       typingRulesExpr :: [LocTyping] -> [IDTyping] -> Expr -> PhraseTypes -> Bool
+       typingRulesExpr lambda gama expr (TypeT t) = if t1 <= t then True else False
+                                                  where t1 = searchID expr gama
+
+       typingRulesCmd :: [LocTyping] -> [IDTyping] -> Cmd -> PhraseTypes -> Bool
+       
 
 --exemplos
 
