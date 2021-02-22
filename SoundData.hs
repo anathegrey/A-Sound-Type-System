@@ -59,6 +59,7 @@ module SoundData where
 --fig 5
        data DataTypes = High
                       | Low
+                      | None
                       deriving (Show, Eq)
        instance Ord DataTypes where
            Low  <= High = True
@@ -69,17 +70,24 @@ module SoundData where
        data PhraseTypes = TypeT DataTypes
                         | TypeVar DataTypes
                         | TypeCmd DataTypes
-                        | None
                         deriving Show
 
        type LocTyping = (Mem, PhraseTypes)
+       
        type IDTyping = (Var, PhraseTypes)
 
        searchIDExpr :: Expr -> [IDTyping] -> DataTypes
+       searchIDExpr _ [] = None
        searchIDExpr (VarE x) ((y, TypeVar t) : ys) = if x == y then t else (searchIDExpr (VarE x) ys)
-       searchIDExpr (VarE x) (_ : ys) = searchIDExpr (VarE x) ys
+       searchIDExpr x (_ : ys) = searchIDExpr x ys
 
-       --searchIDCmd :: Cmd -> [IDTyping] -> DataTypes 
+       searchIDCmd :: Cmd -> [IDTyping] -> DataTypes
+       searchIDCmd _ [] = None 
+       searchIDCmd (EqC (VarE x) e2) ((y, TypeCmd t) : ys) = if x == y then t else (searchIDCmd (EqC (VarE x) e2) ys)
+       searchIDCmd x (_ : ys) = searchIDCmd x ys
 
        searchLoc :: Expr -> [LocTyping] -> DataTypes
-       searchLoc (Literal x) (((l, y), TypeT t) : ls) = if x == y then t else (searchLoc (Literal x) ls) 
+       searchLoc _ [] = None
+       searchLoc (Literal x) (((l, y), TypeT t) : ls) = if x == y then t else (searchLoc (Literal x) ls)
+       searchLoc (Less e1 (Literal x)) (((l, y), TypeT t) : ls) = if x == y then t else (searchLoc (Less e1 (Literal x)) ls)
+       searchLoc (EqE e1 (Literal x)) (((l, y), TypeT t) : ls) = if x == y then t else (searchLoc (EqE e1 (Literal x)) ls)

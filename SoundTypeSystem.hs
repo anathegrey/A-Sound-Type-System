@@ -54,7 +54,7 @@ module SoundTypeSystem where
        typingRulesExpr lambda gama expr (TypeT t) = let t1 = searchIDExpr expr gama                                     --R-Val'
                                                    in t1 <= t
 
-      {- typingRulesCmd :: [LocTyping] -> [IDTyping] -> Cmd -> PhraseTypes -> Bool
+       typingRulesCmd :: [LocTyping] -> [IDTyping] -> Cmd -> PhraseTypes -> Bool
        typingRulesCmd lambda gama (EqC e1 e2) (TypeCmd t1) = let tVar = searchIDExpr e1 gama                            --Assign'
                                                                  t    = searchLoc e2 lambda
                                                             in (tVar == t && t1 <= t) 
@@ -63,12 +63,12 @@ module SoundTypeSystem where
                                                                   tCmd2 = searchIDCmd c2 gama
                                                               in (t == tCmd1 && t == tCmd2 && t1 <= t)
        typingRulesCmd lambda gama (While e c) (TypeCmd t1) = let t    = searchLoc e lambda                              --While'
-                                                                 tCmd = searchCmd c gama
-                                                             in (t == tCmd && t1 <= t) -}
+                                                                 tCmd = searchIDCmd c gama
+                                                             in (t == tCmd && t1 <= t) 
                                                             
        
 
---exemplos
+--examples - fig 3
 
        ex1 :: Cmd
        ex1 = Letvar (VarE "x") (Add (Literal 2) (Literal 1)) (EqC (LocE 2) (Literal 9))
@@ -84,3 +84,17 @@ module SoundTypeSystem where
 
        ex5 :: Cmd
        ex5 = Seq ex1 (EqC (LocE 3) (Literal 10))
+
+--examples - fig 5
+
+       ex6 :: Expr
+       ex6 = VarE "x"
+
+       ex7 :: Cmd
+       ex7 = EqC (VarE "x") (Literal 2)
+
+       ex8 :: Cmd
+       ex8 = If (Less (VarE "y") (Literal 2)) (EqC (VarE "x") (Literal 3)) (EqC (VarE "y") (Literal 1))
+
+       ex9 :: Cmd
+       ex9 = While (EqE (VarE "y") (Literal 2)) (EqC (VarE "y") (Literal 1))
